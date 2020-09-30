@@ -1,7 +1,3 @@
-IMAGE := amundsendev/ybloader
-VERSION:= $(shell grep -m 1 '__version__' setup.py | cut -d '=' -f 2 | tr -d "'" | tr -d '[:space:]')
-
-.PHONY: clean
 clean:
 	find . -name \*.pyc -delete
 	find . -name __pycache__ -delete
@@ -20,9 +16,4 @@ mypy:
 
 .PHONY: test
 test: test_unit lint mypy
-
-.PHONY: image
-image:
-	docker build -f ybloader.Dockerfile -t ${IMAGE}:${VERSION} .
-	docker tag ${IMAGE}:${VERSION} ${IMAGE}:latest
 
