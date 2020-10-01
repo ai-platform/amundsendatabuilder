@@ -1,5 +1,3 @@
-
-
 import argparse
 import sys
 import textwrap
@@ -62,21 +60,7 @@ neo4j_endpoint = NEO4J_ENDPOINT
 neo4j_user = args.n4j_user
 neo4j_password = args.n4j_password
 
-
-# todo: connection string needs to change
-def connection_string():
-    user = args.user
-    password = args.password
-    host = args.hostname
-    port = args.port
-    db = args.db
-    return "postgresql://%s:%s@%s:%s/%s" % (user, password, host, port, db)
-
-
 def run_minio_job():
-    where_clause_suffix = textwrap.dedent("""
-        where table_schema = 'public'
-    """)
 
     tmp_folder = '/var/tmp/amundsen/table_metadata'
     node_files_folder = '{tmp_folder}/nodes/'.format(tmp_folder=tmp_folder)
