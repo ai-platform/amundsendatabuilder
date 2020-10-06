@@ -15,7 +15,7 @@ spec:
           creationTimestamp: null
         spec:
           containers:
-          - image: simplejob
+          - image: minio-amundsen-loader
             imagePullPolicy: IfNotPresent
             name: minio-amundsen-loader
             resources: {}

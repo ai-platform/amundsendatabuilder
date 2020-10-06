@@ -1,18 +1,19 @@
-# Copyright Contributors to the Amundsen project.
-# SPDX-License-Identifier: Apache-2.0
-
 from pyhocon import ConfigTree
 from typing import Any
 import boto3
-
 from databuilder.extractor.base_extractor import Extractor
 from databuilder.models.table_metadata import TableMetadata, ColumnMetadata
 
 class MinioExtractor(Extractor):
 
     """
-    An Extractor that extracts records via CSV.
+    An Extractor that extracts meta data from minio and stores them in amundsen.
     """
+    # CONFIG KEYS
+    ACCESS_KEY = 'access_key'
+    SECRET_KEY = 'secret_key'
+    BUCKET_NAME = 'bucket_name'
+    ENDPOINT_URL = 'endpoint_url'
 
     def init(self, conf: ConfigTree) -> None:
         """
@@ -21,13 +22,18 @@ class MinioExtractor(Extractor):
         self.conf = conf
         self._extract_iter = None
 
+        self.bucket_name = conf.get_string(MinioExtractor.BUCKET_NAME)
+        self.endpoint_url = conf.get_string(MinioExtractor.ENDPOINT_URL)
+        self.access_key = conf.get_string(MinioExtractor.ACCESS_KEY)
+        self.secret_key = conf.get_string(MinioExtractor.SECRET_KEY)
+
         self.client = boto3.client('s3',
-                          endpoint_url='http://dev-master:9000/',
-                          aws_access_key_id='myaccesskey',
-                          aws_secret_access_key='mysecretkey',
+                          endpoint_url=self.endpoint_url,
+                          aws_access_key_id=self.access_key,
+                          aws_secret_access_key=self.secret_key,
                           region_name='us-east-1')
 
-    def get_s3_keys(self, bucket):
+    def get_data_csv_keys(self, bucket):
         """Get a list of keys in an S3 bucket."""
         keys = []
         resp = self.client.list_objects_v2(Bucket=bucket)
@@ -37,14 +43,13 @@ class MinioExtractor(Extractor):
         return iter(keys)
 
     def extract(self) -> Any:
-
         if not self._extract_iter:
-            self._extract_iter = self.get_s3_keys('dev-raw-data')
+            self._extract_iter = self.get_data_csv_keys('dev-raw-data')
         try:
             name = next(self._extract_iter)
 
             r = self.client.select_object_content(
-                Bucket='dev-raw-data',
+                Bucket=self.bucket_name,
                 Key=name,
                 ExpressionType='SQL',
                 Expression="select * from s3object",

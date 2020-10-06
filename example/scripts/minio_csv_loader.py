@@ -67,6 +67,14 @@ def run_minio_job():
     relationship_files_folder = '{tmp_folder}/relationships/'.format(tmp_folder=tmp_folder)
 
     job_config = ConfigFactory.from_dict({
+        'extractor.minio.csv.{}'.format(MinioExtractor.ACCESS_KEY):
+            'myaccesskey',
+        'extractor.minio.csv.{}'.format(MinioExtractor.SECRET_KEY):
+            'mysecretkey',
+        'extractor.minio.csv.{}'.format(MinioExtractor.BUCKET_NAME):
+            'dev-raw-data',
+        'extractor.minio.csv.{}'.format(MinioExtractor.ENDPOINT_URL):
+            'http://dev-master:9000/',
         'loader.filesystem_csv_neo4j.{}'.format(FsNeo4jCSVLoader.NODE_DIR_PATH):
             node_files_folder,
         'loader.filesystem_csv_neo4j.{}'.format(FsNeo4jCSVLoader.RELATION_DIR_PATH):
