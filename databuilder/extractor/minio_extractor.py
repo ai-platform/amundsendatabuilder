@@ -52,7 +52,7 @@ class MinioExtractor(Extractor):
                 Bucket=self.bucket_name,
                 Key=name,
                 ExpressionType='SQL',
-                Expression="select * from s3object",
+                Expression="select * from s3object limit 1",
                 InputSerialization={
                     'CSV': {
                         "FileHeaderInfo": "None",
@@ -83,7 +83,7 @@ class MinioExtractor(Extractor):
                                   # TODO: this possibly should parse stringified booleans;
                                   # right now it only will be false for empty strings
                                   is_view=True,
-                                  tags='real-estate'
+                                  tags=['minio', 'raw']
                                   )
             return table
         except StopIteration:
