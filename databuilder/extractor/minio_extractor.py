@@ -44,7 +44,7 @@ class MinioExtractor(Extractor):
 
     def extract(self) -> Any:
         if not self._extract_iter:
-            self._extract_iter = self.get_data_csv_keys('dev-raw-data')
+            self._extract_iter = self.get_data_csv_keys(self.bucket_name)
         try:
             name = next(self._extract_iter)
 
@@ -75,7 +75,7 @@ class MinioExtractor(Extractor):
                 colMetadatalist.append(col)
 
             table = TableMetadata(database='minio',
-                                  cluster='dev-raw-data',
+                                  cluster=self.bucket_name,
                                   schema='minio',
                                   name=name.split('/',1)[0],
                                   description='',
