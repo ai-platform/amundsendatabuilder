@@ -1,0 +1,34 @@
+import socket
+from typing import Tuple
+
+import pyspark
+from pyspark import SparkContext
+from pyspark.sql.session import SparkSession
+
+from databuilder.utils.minio_conf import MinioConf
+
+
+def initSparkSession(minio_conf: MinioConf, k8s_hostname: str, k8s_port: int = 6443) -> Tuple[SparkContext, SparkSession]:
+    k8s_master = f'k8s://https://{k8s_hostname}:{k8s_port}'
+    driver_ip = socket.gethostbyname(socket.gethostname())
+
+    conf = pyspark.SparkConf().setMaster(k8s_master)
+    conf.set("spark.jars", "local:///opt/spark/jars/aws-java-sdk-bundle-1.11.563.jar,local:///opt/spark/jars/hadoop-aws-3.2.0.jar")
+    conf.set("spark.hadoop.fs.s3a.endpoint", minio_conf.endpoint)
+    conf.set("spark.hadoop.fs.s3a.access.key", minio_conf.access_key)
+    conf.set("spark.hadoop.fs.s3a.secret.key", minio_conf.secret_key)
+    conf.set("spark.hadoop.fs.s3a.fast.upload", True)
+    conf.set("spark.hadoop.fs.s3a.path.style.access", True)
+    conf.set("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
+    conf.set("spark.executor.instances", 2)
+    conf.set("spark.executor.memory", "8g")
+    conf.set("spark.driver.memory", "4g")
+    conf.set("spark.driver.hostname", driver_ip)
+    conf.set("spark.driver.host", driver_ip)
+    conf.set("spark.kubernetes.driver.container.image", "spark:python")
+    conf.set("spark.kubernetes.executor.container.image", "spark:python")
+    conf.set("spark.kubernetes.container.image.pullPolicy", "Never")
+    conf.set("spark.kubernetes.authenticate.driver.serviceAccountName", "spark")
+
+    sc = pyspark.SparkContext(master=k8s_master, appName='amundsen-index-minio', conf=conf)
+    return sc, SparkSession(sc)

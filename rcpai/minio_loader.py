@@ -1,28 +1,22 @@
 import os
-from dataclasses import dataclass
 
 from pyhocon import ConfigFactory
+from pyspark.sql.session import SparkSession
 
 from databuilder.extractor.minio_extractor import MinioExtractor
 from databuilder.job.job import DefaultJob
 from databuilder.loader.file_system_neo4j_csv_loader import FsNeo4jCSVLoader
 from databuilder.publisher import neo4j_csv_publisher
 from databuilder.publisher.neo4j_csv_publisher import Neo4jCsvPublisher
-from databuilder.task.task import DefaultTask
 from databuilder.rcpai.base_arg_parser import RCPArgParser
 from databuilder.rcpai.base_data_loader import BaseDataLoader
-
-
-@dataclass
-class MinioConf(object):
-    endpoint: str
-    access_key: str
-    secret_key: str
-    bucket: str
+from databuilder.task.task import DefaultTask
+from databuilder.utils.minio_conf import MinioConf
+from databuilder.utils.spark_driver import initSparkSession
 
 
 class MinioLoader(BaseDataLoader):
-    def create_extract_job(self, minio_conf: MinioConf, *args, **kwargs) -> DefaultJob:
+    def create_extract_job(self, minio_conf: MinioConf, session: SparkSession, *args, **kwargs) -> DefaultJob:
         tmp_folder = os.path.join(self.base_dir, 'table_metadata')
         node_files_folder = f'{tmp_folder}/nodes/'
         relationship_files_folder = f'{tmp_folder}/relationships/'
@@ -36,6 +30,8 @@ class MinioLoader(BaseDataLoader):
                 minio_conf.bucket,
             'extractor.minio.csv.{}'.format(MinioExtractor.ENDPOINT_URL):
                 minio_conf.endpoint,
+            'extractor.minio.csv.{}'.format(MinioExtractor.SPARK_SESSION_KEY):
+                session,
             'loader.filesystem_csv_neo4j.{}'.format(FsNeo4jCSVLoader.NODE_DIR_PATH):
                 node_files_folder,
             'loader.filesystem_csv_neo4j.{}'.format(FsNeo4jCSVLoader.RELATION_DIR_PATH):
@@ -85,4 +81,6 @@ if __name__ == "__main__":
     )
 
     loader = MinioLoader(es_client=es_client, neo4j_conf=neo4j_conf)
-    loader.load(minio_conf)
+    sc, session = initSparkSession(minio_conf, args.hostname)
+    loader.load(minio_conf, session)
+    sc.stop()
