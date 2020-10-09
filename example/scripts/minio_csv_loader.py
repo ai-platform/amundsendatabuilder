@@ -25,8 +25,15 @@ DEV_HOST = "10.142.20.66"
 
 parser = argparse.ArgumentParser(description='Index data in a Minio Object')
 
+### Minio Info
+parser.add_argument('--accesskey', '-ak', type=str, dest='accesskey', default='myaccesskey',
+                    help='Accesskey of the Minio server')
+parser.add_argument('--secretkey', '-sk', type=str, dest='secretkey', default='mysecretkey',
+                    help='Secretkey of the Minio server')
 parser.add_argument('--hostname', '-H', type=str, dest='hostname', default=DEV_HOST,
-                    help='Hostname of the yugabyte SQL server')
+                    help='Hostname of the Minio server')
+parser.add_argument('--bucket', '-b', type=str, dest='bucket', default='dev-raw-data',
+                    help='Minio bucket to retrieve objects')
 
 ### Elasticsearch Info
 parser.add_argument('--eshost', type=str, dest='es_host',
@@ -74,7 +81,7 @@ def run_minio_job():
         'extractor.minio.csv.{}'.format(MinioExtractor.BUCKET_NAME):
             'dev-raw-data',
         'extractor.minio.csv.{}'.format(MinioExtractor.ENDPOINT_URL):
-            'http://dev-master:9000/',
+            'http://10.142.20.66:9000/',
         'loader.filesystem_csv_neo4j.{}'.format(FsNeo4jCSVLoader.NODE_DIR_PATH):
             node_files_folder,
         'loader.filesystem_csv_neo4j.{}'.format(FsNeo4jCSVLoader.RELATION_DIR_PATH):

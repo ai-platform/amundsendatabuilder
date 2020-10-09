@@ -5,7 +5,6 @@ from databuilder.extractor.base_extractor import Extractor
 from databuilder.models.table_metadata import TableMetadata, ColumnMetadata
 
 class MinioExtractor(Extractor):
-
     """
     An Extractor that extracts meta data from minio and stores them in amundsen.
     """

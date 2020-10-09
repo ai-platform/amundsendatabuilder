@@ -2,6 +2,7 @@ apiVersion: batch/v1beta1
 kind: CronJob
 metadata:
   name: minio-amundsen-loader
+  namespace: amundsen
 spec:
   concurrencyPolicy: Allow
   failedJobsHistoryLimit: 1
