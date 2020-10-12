@@ -61,9 +61,9 @@ if __name__ == "__main__":
                         help='Scheme of the MinIO server')
     parser.add_argument('--port', '-p', type=int, dest='port', default=9000,
                         help='Port of the MinIO server')
-    parser.add_argument('--accesskey', '-ak', type=str, dest='accesskey', default='myaccesskey',
+    parser.add_argument('--accesskey', '-ak', type=str, dest='accesskey',
                         help='Access key for the MinIO server')
-    parser.add_argument('--secretkey', '-sk', type=str, dest='secretkey', default='mysecretkey',
+    parser.add_argument('--secretkey', '-sk', type=str, dest='secretkey',
                         help='Secret key for the MinIO server')
     parser.add_argument('--bucket', '-b', type=str, dest='bucket', default='dev-raw-data',
                         help='MinIO bucket from which to retrieve objects')
