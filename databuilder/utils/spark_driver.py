@@ -13,6 +13,7 @@ def initSparkSession(minio_conf: MinioConf, k8s_hostname: str, k8s_port: int = 6
     k8s_master = f'k8s://https://{k8s_hostname}:{k8s_port}'
     driver_ip = socket.gethostbyname(socket.gethostname())
     jars_dir = os.path.join(os.environ.get('SPARK_HOME'), 'jars')
+    spark_image = 'rcpai/spark-python:3.0.1'
 
     conf = pyspark.SparkConf().setMaster(k8s_master)
     conf.set("spark.jars", f'local://{jars_dir}/aws-java-sdk-bundle-1.11.563.jar,local://{jars_dir}/hadoop-aws-3.2.0.jar')
@@ -27,8 +28,8 @@ def initSparkSession(minio_conf: MinioConf, k8s_hostname: str, k8s_port: int = 6
     conf.set("spark.driver.memory", "2g")
     conf.set("spark.driver.hostname", driver_ip)
     conf.set("spark.driver.host", driver_ip)
-    conf.set("spark.kubernetes.driver.container.image", "spark:python")
-    conf.set("spark.kubernetes.executor.container.image", "spark:python")
+    conf.set("spark.kubernetes.driver.container.image", spark_image)
+    conf.set("spark.kubernetes.executor.container.image", spark_image)
     conf.set("spark.kubernetes.container.image.pullPolicy", "Never")
     conf.set("spark.kubernetes.authenticate.driver.serviceAccountName", "spark")
 

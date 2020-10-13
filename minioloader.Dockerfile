@@ -1,9 +1,4 @@
-# Expected command:
-# docker build -t amundsen-minio-loader:latest --build-arg base_img=spark:python -f minioloader.Dockerfile .
-ARG base_img
-
-# Expected to be spark:python type docker image with s3 jars already installed
-FROM $base_img
+FROM rcpai/spark-python:3.0.1
 
 # Attach spark user to real username
 USER root
