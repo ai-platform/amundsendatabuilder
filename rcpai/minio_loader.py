@@ -65,7 +65,7 @@ if __name__ == "__main__":
                         help='Access key for the MinIO server')
     parser.add_argument('--secretkey', '-sk', type=str, dest='secretkey',
                         help='Secret key for the MinIO server')
-    parser.add_argument('--bucket', '-b', type=str, dest='bucket', default='dev-raw-data',
+    parser.add_argument('--bucket', '-b', type=str, dest='bucket', default='data-raw-dev',
                         help='MinIO bucket from which to retrieve objects')
 
     es_client = parser.es_client()
