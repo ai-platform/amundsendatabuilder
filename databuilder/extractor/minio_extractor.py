@@ -51,7 +51,7 @@ class MinioExtractor(Extractor):
                 Bucket=self.bucket_name,
                 Key=name,
                 ExpressionType='SQL',
-                Expression="select * from s3object limit 0",
+                Expression="select * from s3object limit 1",
                 InputSerialization={
                     'CSV': {
                         "FileHeaderInfo": "None",
