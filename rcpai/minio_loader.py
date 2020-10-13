@@ -22,15 +22,15 @@ class MinioLoader(BaseDataLoader):
         relationship_files_folder = f'{tmp_folder}/relationships/'
 
         job_config = ConfigFactory.from_dict({
-            'extractor.minio.csv.{}'.format(MinioExtractor.ACCESS_KEY):
+            'extractor.minio.{}'.format(MinioExtractor.ACCESS_KEY):
                 minio_conf.access_key,
-            'extractor.minio.csv.{}'.format(MinioExtractor.SECRET_KEY):
+            'extractor.minio.{}'.format(MinioExtractor.SECRET_KEY):
                 minio_conf.secret_key,
-            'extractor.minio.csv.{}'.format(MinioExtractor.BUCKET_NAME):
+            'extractor.minio.{}'.format(MinioExtractor.BUCKET_NAME):
                 minio_conf.bucket,
-            'extractor.minio.csv.{}'.format(MinioExtractor.ENDPOINT_URL):
+            'extractor.minio.{}'.format(MinioExtractor.ENDPOINT_URL):
                 minio_conf.endpoint,
-            'extractor.minio.csv.{}'.format(MinioExtractor.SPARK_SESSION_KEY):
+            'extractor.minio.{}'.format(MinioExtractor.SPARK_SESSION_KEY):
                 session,
             'loader.filesystem_csv_neo4j.{}'.format(FsNeo4jCSVLoader.NODE_DIR_PATH):
                 node_files_folder,
