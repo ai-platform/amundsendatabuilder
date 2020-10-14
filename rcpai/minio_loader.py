@@ -1,41 +1,37 @@
 import os
-from dataclasses import dataclass
 
 from pyhocon import ConfigFactory
+from pyspark.sql.session import SparkSession
 
 from databuilder.extractor.minio_extractor import MinioExtractor
 from databuilder.job.job import DefaultJob
 from databuilder.loader.file_system_neo4j_csv_loader import FsNeo4jCSVLoader
 from databuilder.publisher import neo4j_csv_publisher
 from databuilder.publisher.neo4j_csv_publisher import Neo4jCsvPublisher
-from databuilder.task.task import DefaultTask
 from databuilder.rcpai.base_arg_parser import RCPArgParser
 from databuilder.rcpai.base_data_loader import BaseDataLoader
-
-
-@dataclass
-class MinioConf(object):
-    endpoint: str
-    access_key: str
-    secret_key: str
-    bucket: str
+from databuilder.task.task import DefaultTask
+from databuilder.utils.minio_conf import MinioConf
+from databuilder.utils.spark_driver import initSparkSession
 
 
 class MinioLoader(BaseDataLoader):
-    def create_extract_job(self, minio_conf: MinioConf, *args, **kwargs) -> DefaultJob:
+    def create_extract_job(self, minio_conf: MinioConf, session: SparkSession, *args, **kwargs) -> DefaultJob:
         tmp_folder = os.path.join(self.base_dir, 'table_metadata')
         node_files_folder = f'{tmp_folder}/nodes/'
         relationship_files_folder = f'{tmp_folder}/relationships/'
 
         job_config = ConfigFactory.from_dict({
-            'extractor.minio.csv.{}'.format(MinioExtractor.ACCESS_KEY):
+            'extractor.minio.{}'.format(MinioExtractor.ACCESS_KEY):
                 minio_conf.access_key,
-            'extractor.minio.csv.{}'.format(MinioExtractor.SECRET_KEY):
+            'extractor.minio.{}'.format(MinioExtractor.SECRET_KEY):
                 minio_conf.secret_key,
-            'extractor.minio.csv.{}'.format(MinioExtractor.BUCKET_NAME):
+            'extractor.minio.{}'.format(MinioExtractor.BUCKET_NAME):
                 minio_conf.bucket,
-            'extractor.minio.csv.{}'.format(MinioExtractor.ENDPOINT_URL):
+            'extractor.minio.{}'.format(MinioExtractor.ENDPOINT_URL):
                 minio_conf.endpoint,
+            'extractor.minio.{}'.format(MinioExtractor.SPARK_SESSION_KEY):
+                session,
             'loader.filesystem_csv_neo4j.{}'.format(FsNeo4jCSVLoader.NODE_DIR_PATH):
                 node_files_folder,
             'loader.filesystem_csv_neo4j.{}'.format(FsNeo4jCSVLoader.RELATION_DIR_PATH):
@@ -65,11 +61,11 @@ if __name__ == "__main__":
                         help='Scheme of the MinIO server')
     parser.add_argument('--port', '-p', type=int, dest='port', default=9000,
                         help='Port of the MinIO server')
-    parser.add_argument('--accesskey', '-ak', type=str, dest='accesskey', default='myaccesskey',
+    parser.add_argument('--accesskey', '-ak', type=str, dest='accesskey',
                         help='Access key for the MinIO server')
-    parser.add_argument('--secretkey', '-sk', type=str, dest='secretkey', default='mysecretkey',
+    parser.add_argument('--secretkey', '-sk', type=str, dest='secretkey',
                         help='Secret key for the MinIO server')
-    parser.add_argument('--bucket', '-b', type=str, dest='bucket', default='dev-raw-data',
+    parser.add_argument('--bucket', '-b', type=str, dest='bucket', default='data-raw-dev',
                         help='MinIO bucket from which to retrieve objects')
 
     es_client = parser.es_client()
@@ -85,4 +81,6 @@ if __name__ == "__main__":
     )
 
     loader = MinioLoader(es_client=es_client, neo4j_conf=neo4j_conf)
-    loader.load(minio_conf)
+    sc, session = initSparkSession(minio_conf, args.hostname)
+    loader.load(minio_conf, session)
+    sc.stop()
