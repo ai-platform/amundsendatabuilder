@@ -19,7 +19,7 @@ from databuilder.publisher.elasticsearch_publisher import ElasticsearchPublisher
 from databuilder.publisher.neo4j_csv_publisher import Neo4jCsvPublisher
 from databuilder.task.task import DefaultTask
 from databuilder.transformer.base_transformer import NoopTransformer
-
+from databuilder.utils.spark_driver_dev import *
 
 DEV_HOST = "10.142.20.66"
 
@@ -76,6 +76,8 @@ def run_minio_job():
             'dev-raw-data',
         'extractor.minio.csv.{}'.format(MinioStatsExtractor.ENDPOINT_URL):
             'http://10.142.20.66:9000/',
+        'extractor.minio.csv.{}'.format(MinioStatsExtractor.SPARK_SESSION_KEY):
+            initSparkSessionServer(),
         'loader.filesystem_csv_neo4j.{}'.format(FsNeo4jCSVLoader.NODE_DIR_PATH):
             node_files_folder,
         'loader.filesystem_csv_neo4j.{}'.format(FsNeo4jCSVLoader.RELATION_DIR_PATH):

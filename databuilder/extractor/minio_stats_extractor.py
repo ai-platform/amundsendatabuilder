@@ -4,9 +4,9 @@ import boto3
 from databuilder.extractor.base_extractor import Extractor
 from databuilder.utils.minio_spec import MinioSpecUtils
 from databuilder.models.table_stats import TableColumnStats
-from databuilder.utils.minio_spec import CSVFormat
-from databuilder.utils.spark_driver_local import initSparkSession
+#from databuilder.utils.spark_driver_dev import initSparkSessionLocal
 from databuilder.utils.pyspark_stats import get_stats_by_column
+from pyspark.sql.session import SparkSession
 
 
 class MinioStatsExtractor(Extractor):
@@ -32,6 +32,8 @@ class MinioStatsExtractor(Extractor):
         self.endpoint_url = conf.get_string(MinioStatsExtractor.ENDPOINT_URL)
         self.access_key = conf.get_string(MinioStatsExtractor.ACCESS_KEY)
         self.secret_key = conf.get_string(MinioStatsExtractor.SECRET_KEY)
+        self.spark_session: SparkSession = conf.get(MinioStatsExtractor.SPARK_SESSION_KEY)
+        #self.spark_session = initSparkSessionLocal()
 
         self.db = 'minio'
         self.schema = 'minio'
@@ -42,10 +44,9 @@ class MinioStatsExtractor(Extractor):
                                  aws_secret_access_key=self.secret_key,
                                  region_name='us-east-1')
         # TODO: use spark session from the arg parser using Spark/Kubernetes deployment
-        self.spark_session = initSparkSession()
 
     def get_stats_iter(self) -> Iterator[dict]:
-        """Get a stats iter of stats dictionaries in an S3 bucket."""
+        """Get a stats iter of column stats dictionaries."""
         stat_objs = []
         keys = self.get_dataset_keys()
 
@@ -73,6 +74,8 @@ class MinioStatsExtractor(Extractor):
         dataset_name = MinioSpecUtils.path_to_dataset_name(key)
         basename, format = MinioSpecUtils.split_dataset(dataset_name)
         s3_path = f's3a://{self.bucket_name}/{key}'
+
+        print("s3_path: ", s3_path)
 
         df = format.spark_load(self.spark_session, s3_path)
         df.printSchema()
