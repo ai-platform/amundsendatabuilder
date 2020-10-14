@@ -1,7 +1,8 @@
 import pyspark.sql.functions as F
+from typing import List
 
 
-def get_numeric_stats(df, col, count):
+def get_numeric_stats(df, col, count) -> List[dict]:
     stats = df.select(F.round(F.mean(col)).alias('mean'),
                       F.round(F.stddev(col)).alias('std dev'),
                       F.min(col).alias('min'),
@@ -13,7 +14,7 @@ def get_numeric_stats(df, col, count):
     return stats
 
 
-def get_string_stats(df, col, count):
+def get_string_stats(df, col, count) -> List[dict]:
     stats = df.select(F.approx_count_distinct(col).alias("distinct values"),
                       (F.count(F.when(F.isnan(col) | F.col(col).isNull(), col)) / count).alias('null pct')) \
         .collect()[0].asDict()
@@ -23,18 +24,18 @@ def get_string_stats(df, col, count):
     return stats
 
 
-def get_datetime_stats(df, col, count):
+def get_datetime_stats(df, col, count) -> List[dict]:
     stats = df.select(F.min(col).alias('min'),
                       F.max(col).alias('max'))
     return stats
 
 
-def get_stats_by_column(key, col_name, col_type, df, count):
+def get_stats_by_column(table_name, col_name, col_type, df, count) -> List[dict]:
     stat_objs = []
     stat_values = stat_func_by_type[col_type](df, col_name, count)
     for stat in stat_values:
         stat_obj = {
-            'table_name': key.split('/', 1)[0],
+            'table_name': table_name,
             'column_name': col_name,
             'stat_name': stat,
             'stat_val': str(stat_values[stat])

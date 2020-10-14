@@ -41,10 +41,10 @@ class MinioStatsExtractor(Extractor):
                                  aws_access_key_id=self.access_key,
                                  aws_secret_access_key=self.secret_key,
                                  region_name='us-east-1')
-        # TODO: use spark session from the arg parser, on a Spark/Kubernetes deployment
+        # TODO: use spark session from the arg parser using Spark/Kubernetes deployment
         self.spark_session = initSparkSession()
 
-    def get_stats_iter(self):
+    def get_stats_iter(self) -> Iterator[dict]:
         """Get a stats iter of stats dictionaries in an S3 bucket."""
         stat_objs = []
         keys = self.get_dataset_keys()
@@ -55,7 +55,7 @@ class MinioStatsExtractor(Extractor):
         print("stat_objs: ", stat_objs)
         return iter(stat_objs)
 
-    def get_dataset_keys(self) -> Iterator[str]:
+    def get_dataset_keys(self) -> List[str]:
         """Get a list of keys in an S3 bucket."""
         dataset_paths = set()
         result = self.s3.meta.client.list_objects(Bucket=self.bucket_name, Delimiter='/',
@@ -67,17 +67,12 @@ class MinioStatsExtractor(Extractor):
             dataset_paths.add(path)
         return dataset_paths
 
-    def get_file_stats(self, key):
+    def get_file_stats(self, key) -> List[dict]:
         stats = []
 
         dataset_name = MinioSpecUtils.path_to_dataset_name(key)
         basename, format = MinioSpecUtils.split_dataset(dataset_name)
         s3_path = f's3a://{self.bucket_name}/{key}'
-
-        print("dataset_name: ", dataset_name)
-        print("basename: ", basename)
-        print("format: ", format)
-        print("s3_path: ", s3_path)
 
         df = format.spark_load(self.spark_session, s3_path)
         df.printSchema()
@@ -96,7 +91,7 @@ class MinioStatsExtractor(Extractor):
         except StopIteration:
             return None
 
-    def column_stat_from_stat_obj(self, stat_obj):
+    def column_stat_from_stat_obj(self, stat_obj) -> TableColumnStats:
         stat = TableColumnStats(table_name=stat_obj['table_name'],
                                 col_name=stat_obj['column_name'],
                                 stat_name=stat_obj['stat_name'],
@@ -109,9 +104,6 @@ class MinioStatsExtractor(Extractor):
                                 cluster=self.bucket_name,
                                 schema=self.schema
                                 )
-
-        print("stat: ", stat.__dict__)
-
         return stat
 
     def get_scope(self) -> str:
