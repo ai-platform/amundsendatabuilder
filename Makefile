@@ -7,8 +7,13 @@ clean:
 	find . -name __pycache__ -delete
 	rm -rf dist/
 
+.PHONY: build
+build:
+	pip install -r requirements.txt
+
 .PHONY: test_unit
 test_unit:
+	pip install -r test-requirements.txt
 	python3 -bb -m pytest tests
 
 lint:
@@ -19,7 +24,7 @@ mypy:
 	mypy .
 
 .PHONY: test
-test: test_unit lint mypy
+test: build test_unit lint mypy
 
 .PHONY: image
 image:

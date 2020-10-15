@@ -1,4 +1,4 @@
-from typing import Any, Iterator
+from typing import Any, Iterator, Optional
 
 import boto3
 from pyhocon import ConfigTree
@@ -25,7 +25,7 @@ class MinioExtractor(Extractor):
         :param conf:
         """
         self.conf = conf
-        self._extract_iter = None
+        self._extract_iter: Optional[Iterator[str]] = None
 
         self.bucket_name = conf.get_string(MinioExtractor.BUCKET_NAME)
         self.endpoint_url = conf.get_string(MinioExtractor.ENDPOINT_URL)
@@ -60,8 +60,10 @@ class MinioExtractor(Extractor):
         except StopIteration:
             return None
 
-    def metadata_from_dataset_path(self, dataset_path) -> TableMetadata:
+    def metadata_from_dataset_path(self, dataset_path: str) -> TableMetadata:
         dataset_name = MinioSpecUtils.path_to_dataset_name(dataset_path)
+        if not dataset_name:
+            raise ValueError("Invalid dataset path")
         basename, format = MinioSpecUtils.split_dataset(dataset_name)
 
         s3_path = f's3a://{self.bucket_name}/{dataset_path}'

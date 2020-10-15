@@ -1,0 +1,14 @@
+version: 2.1
+jobs:
+  check:
+    docker:
+      # does not build on python3.8
+      - image: cimg/python:3.7
+    steps:
+      - checkout
+      - run: make test
+
+workflows:
+  ci-check:
+    jobs:
+      - check

@@ -24,11 +24,11 @@ class RCPArgParser(object):
     def _arg_parser(description: str) -> argparse.ArgumentParser:
         parser = argparse.ArgumentParser(description=description)
 
-        ### Host Info
+        # Host Info
         parser.add_argument('--hostname', '-H', type=str, dest='hostname', default=DEV_HOST,
                             help='Hostname of the Minio server')
 
-        ### Elasticsearch Info
+        # Elasticsearch Info
         parser.add_argument('--eshost', type=str, dest='es_host',
                             help='Hostname for elasticsearch server')
         parser.add_argument('--esuser', type=str, dest='es_user', default='elasticsearch',
@@ -36,7 +36,7 @@ class RCPArgParser(object):
         parser.add_argument('--espassword', type=str, dest='es_password', default='elasticsearch',
                             help='Password to log in to the elasticsearch server with')
 
-        ### Neo4j Info
+        # Neo4j Info
         parser.add_argument('--n4jhost', type=str, dest='n4j_host',
                             help='Hostname for Neo4j server')
         parser.add_argument('--n4juser', type=str, dest='n4j_user', default='neo4j',
@@ -45,10 +45,10 @@ class RCPArgParser(object):
                             help='Password to log in to the Neo4j server with')
         return parser
 
-    def add_argument(self, *args, **kwargs):
+    def add_argument(self, *args: Any, **kwargs: Any) -> None:
         self.parser.add_argument(*args, **kwargs)
 
-    def parse_args(self):
+    def parse_args(self) -> Any:
         if self.args is None:
             self.args = self.parser.parse_args()
         return self.args

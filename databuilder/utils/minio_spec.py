@@ -8,7 +8,7 @@ from pyspark.sql import DataFrame
 
 @dataclass
 class Format(object):
-    format: str
+    format: str  # NOQA: E701
     extension: str
     datafile: Optional[str]
 
@@ -19,7 +19,7 @@ class Format(object):
 
 
 class CSVFormat(Format):
-    def __init__(self):
+    def __init__(self) -> None:
         self.format = "csv"
         self.extension = ".csv"
         self.datafile = "data.csv"
@@ -64,10 +64,10 @@ class MinioSpecUtils(object):
         return dataset_name
 
     @staticmethod
-    def split_dataset(dataset_name: str) -> Tuple[Optional[str], Optional[Format]]:
+    def split_dataset(dataset_name: str) -> Tuple[str, Format]:
         try:
             base, extension = os.path.splitext(dataset_name)
             return base, v0[extension]
         except Exception as e:
             print(e)
-            return None, None
+            raise ValueError(f"Invalid dataset name: {dataset_name}")
