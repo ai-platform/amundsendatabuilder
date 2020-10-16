@@ -48,7 +48,6 @@ class MinioStatsExtractor(Extractor):
         for key in keys:
             stat_objs.extend(self.get_file_stats(key))
 
-        print("stat_objs: ", stat_objs)
         return iter(stat_objs)
 
     def get_dataset_keys(self) -> List[str]:

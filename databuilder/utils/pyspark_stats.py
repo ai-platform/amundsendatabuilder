@@ -8,14 +8,15 @@ from databuilder.models.table_stats import TableColumnStats
 
 
 def get_numeric_stats(df: DataFrame, col: str, col_select: str, count: int) -> dict:
-    stats = df.select(F.round(F.mean(col_select)).alias('mean'),
-                      F.round(F.stddev(col_select)).alias('std dev'),
+    stats = df.select(F.round(F.mean(col_select), 1).alias('mean'),
+                      F.round(F.stddev(col_select), 1).alias('std dev'),
                       F.min(col_select).alias('min'),
                       F.max(col_select).alias('max'),
                       (F.count(F.when(F.isnan(col_select) | F.col(col_select).isNull(), col_select)) / count).alias('null %')) \
         .collect()[0].asDict()
-    quantiles = df.approxQuantile(col_select, [0.25, 0.5, 0.75], 0.2)
+    quantiles = df.approxQuantile(col_select, [0.25, 0.5, 0.75], 0.1)
     stats['25%'], stats['50%'], stats['75%'] = quantiles[0], quantiles[1], quantiles[2]
+    stats['null %'] = round(stats['null %'] * 100)
     return stats
 
 
@@ -24,8 +25,7 @@ def get_string_stats(df: DataFrame, col: str, col_select: str, count: int) -> di
                       (F.count(F.when(F.isnan(col_select) | F.col(col_select).isNull(), col_select)) / count).alias('null %')) \
         .collect()[0].asDict()
     max_val = df.groupby(col_select).count().sort(F.desc('count')).collect()[0].asDict()
-    print("max val: ", max)
-    stats['null %'] = round(stats['null %'], 2) * 100
+    stats['null %'] = round(stats['null %'] * 100)
     stats['most freq value'] = max_val[col]
     stats['most freq %'] = round(max_val['count'] / count, 2) * 100
     return stats
@@ -33,7 +33,8 @@ def get_string_stats(df: DataFrame, col: str, col_select: str, count: int) -> di
 
 def get_datetime_stats(df: DataFrame, col: str, col_select: str, count: int) -> dict:
     stats = df.select(F.min(col_select).alias('min'),
-                      F.max(col_select).alias('max'))
+                      F.max(col_select).alias('max')) \
+        .collect()[0].asDict()
     return stats
 
 
