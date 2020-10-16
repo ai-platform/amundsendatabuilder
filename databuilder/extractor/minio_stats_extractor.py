@@ -1,12 +1,12 @@
-from pyhocon import ConfigTree
+from datetime import datetime
 from typing import Any, Iterator, List
+
 import boto3
+from pyhocon import ConfigTree
+
 from databuilder.extractor.base_extractor import Extractor
 from databuilder.utils.minio_spec import MinioSpecUtils
-from databuilder.models.table_stats import TableColumnStats
-#from databuilder.utils.spark_driver_dev import initSparkSessionLocal
 from databuilder.utils.pyspark_stats import get_stats_by_column
-from pyspark.sql.session import SparkSession
 
 
 class MinioStatsExtractor(Extractor):
@@ -32,18 +32,13 @@ class MinioStatsExtractor(Extractor):
         self.endpoint_url = conf.get_string(MinioStatsExtractor.ENDPOINT_URL)
         self.access_key = conf.get_string(MinioStatsExtractor.ACCESS_KEY)
         self.secret_key = conf.get_string(MinioStatsExtractor.SECRET_KEY)
-        self.spark_session: SparkSession = conf.get(MinioStatsExtractor.SPARK_SESSION_KEY)
-        #self.spark_session = initSparkSessionLocal()
-
-        self.db = 'minio'
-        self.schema = 'minio'
+        self.spark_session = conf.get(MinioStatsExtractor.SPARK_SESSION_KEY)
 
         self.s3 = boto3.resource('s3',
                                  endpoint_url=self.endpoint_url,
                                  aws_access_key_id=self.access_key,
                                  aws_secret_access_key=self.secret_key,
                                  region_name='us-east-1')
-        # TODO: use spark session from the arg parser using Spark/Kubernetes deployment
 
     def get_stats_iter(self) -> Iterator[dict]:
         """Get a stats iter of column stats dictionaries."""
@@ -66,23 +61,23 @@ class MinioStatsExtractor(Extractor):
             if MinioSpecUtils.path_to_dataset_name(path) is None:
                 continue
             dataset_paths.add(path)
+
         return dataset_paths
 
-    def get_file_stats(self, key) -> List[dict]:
+    def get_file_stats(self, key: str) -> List[dict]:
         stats = []
 
         dataset_name = MinioSpecUtils.path_to_dataset_name(key)
         basename, format = MinioSpecUtils.split_dataset(dataset_name)
         s3_path = f's3a://{self.bucket_name}/{key}'
 
-        print("s3_path: ", s3_path)
-
         df = format.spark_load(self.spark_session, s3_path)
-        df.printSchema()
+        count = df.count()
 
-        for col in df.dtypes:
-            stat_vals = get_stats_by_column(basename, col[0], col[1], df, df.count())
-            stats.extend(stat_vals)
+        for col in df.columns:
+            print("col: ", col)
+            stats.extend(get_stats_by_column(self.bucket_name, basename, col, df, count))
+
         return stats
 
     def extract(self) -> Any:
@@ -90,24 +85,9 @@ class MinioStatsExtractor(Extractor):
             self._extract_iter = self.get_stats_iter()
         try:
             stat_obj = next(self._extract_iter)
-            return self.column_stat_from_stat_obj(stat_obj)
+            return stat_obj
         except StopIteration:
             return None
 
-    def column_stat_from_stat_obj(self, stat_obj) -> TableColumnStats:
-        stat = TableColumnStats(table_name=stat_obj['table_name'],
-                                col_name=stat_obj['column_name'],
-                                stat_name=stat_obj['stat_name'],
-                                stat_val='"' + stat_obj['stat_val'] + '"',
-                                # TODO: modify start/end epoch to reflect
-                                # date stats were collected
-                                start_epoch='123',
-                                end_epoch='123',
-                                db=self.db,
-                                cluster=self.bucket_name,
-                                schema=self.schema
-                                )
-        return stat
-
     def get_scope(self) -> str:
-        return 'extractor.minio.csv'
+        return 'extractor.minio.columnstats'

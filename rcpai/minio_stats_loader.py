@@ -15,22 +15,22 @@ from databuilder.utils.minio_conf import MinioConf
 from databuilder.utils.spark_driver import initSparkSession
 
 
-class MinioLoader(BaseDataLoader):
+class MinioStatsLoader(BaseDataLoader):
     def create_extract_job(self, minio_conf: MinioConf, session: SparkSession, *args, **kwargs) -> DefaultJob:
         tmp_folder = os.path.join(self.base_dir, 'table_metadata')
         node_files_folder = f'{tmp_folder}/nodes/'
         relationship_files_folder = f'{tmp_folder}/relationships/'
 
         job_config = ConfigFactory.from_dict({
-            'extractor.minio.{}'.format(MinioStatsExtractor.ACCESS_KEY):
+            'extractor.minio.columnstats.{}'.format(MinioStatsExtractor.ACCESS_KEY):
                 minio_conf.access_key,
-            'extractor.minio.{}'.format(MinioStatsExtractor.SECRET_KEY):
+            'extractor.minio.columnstats.{}'.format(MinioStatsExtractor.SECRET_KEY):
                 minio_conf.secret_key,
-            'extractor.minio.{}'.format(MinioStatsExtractor.BUCKET_NAME):
+            'extractor.minio.columnstats.{}'.format(MinioStatsExtractor.BUCKET_NAME):
                 minio_conf.bucket,
-            'extractor.minio.{}'.format(MinioStatsExtractor.ENDPOINT_URL):
+            'extractor.minio.columnstats.{}'.format(MinioStatsExtractor.ENDPOINT_URL):
                 minio_conf.endpoint,
-            'extractor.minio.{}'.format(MinioStatsExtractor.SPARK_SESSION_KEY):
+            'extractor.minio.columnstats.{}'.format(MinioStatsExtractor.SPARK_SESSION_KEY):
                 session,
             'loader.filesystem_csv_neo4j.{}'.format(FsNeo4jCSVLoader.NODE_DIR_PATH):
                 node_files_folder,
@@ -80,7 +80,7 @@ if __name__ == "__main__":
         bucket=args.bucket
     )
 
-    loader = MinioLoader(es_client=es_client, neo4j_conf=neo4j_conf)
+    loader = MinioStatsLoader(es_client=es_client, neo4j_conf=neo4j_conf)
     sc, session = initSparkSession(minio_conf, args.hostname)
     loader.load(minio_conf, session)
     sc.stop()
