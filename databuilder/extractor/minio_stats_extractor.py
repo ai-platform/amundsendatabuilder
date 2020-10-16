@@ -62,6 +62,8 @@ class MinioStatsExtractor(Extractor):
                 continue
             dataset_paths.add(path)
 
+        print("dataset paths: ", dataset_paths)
+
         return dataset_paths
 
     def get_file_stats(self, key: str) -> List[dict]:
