@@ -7,4 +7,6 @@ RUN pip3 install -r requirements.txt
 COPY . /app
 RUN python3 setup.py install
 
-ENTRYPOINT [ "python3",  "rcpai/yugabyte_core_loader.py" ]
+ARG scriptpath
+ENV scriptpath_env=${scriptpath}
+ENTRYPOINT [ "./rcpai/entrypoint.sh" ]

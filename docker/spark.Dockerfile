@@ -24,4 +24,6 @@ COPY --chown=spark:spark . $HOME/app
 
 RUN python3 setup.py install --user
 
-ENTRYPOINT [ "python3",  "rcpai/minio_loader.py" ]
+ARG scriptpath
+ENV scriptpath_env=${scriptpath}
+ENTRYPOINT [ "./rcpai/entrypoint.sh" ]
