@@ -10,6 +10,7 @@ from databuilder.utils.minio_conf import MinioConf
 
 
 def initSparkSession(minio_conf: MinioConf,
+                     app_name: str,
                      k8s_hostname: str,
                      k8s_port: int = 6443) -> Tuple[SparkContext, SparkSession]:
     k8s_master = f'k8s://https://{k8s_hostname}:{k8s_port}'
@@ -28,11 +29,11 @@ def initSparkSession(minio_conf: MinioConf,
     conf.set('spark.hadoop.fs.s3a.impl', 'org.apache.hadoop.fs.s3a.S3AFileSystem')
 
     conf.set('spark.executor.instances', '1')
-    conf.set('spark.executor.memory', '4g')
+    conf.set('spark.executor.memory', '8g')
 
+    conf.set('spark.driver.memory', '4g')
     conf.set('spark.driver.host', driver_ip)
     conf.set('spark.driver.hostname', driver_ip)
-    conf.set('spark.driver.memory', '2g')
 
     conf.set('spark.kubernetes.authenticate.driver.serviceAccountName', 'spark')
     conf.set('spark.kubernetes.container.image.pullPolicy', 'IfNotPresent')
@@ -40,5 +41,5 @@ def initSparkSession(minio_conf: MinioConf,
     conf.set('spark.kubernetes.executor.container.image', spark_image)
     conf.set('spark.kubernetes.namespace', 'amundsen')
 
-    sc = pyspark.SparkContext(master=k8s_master, appName='amundsen-index-minio', conf=conf)
+    sc = pyspark.SparkContext(master=k8s_master, appName=app_name, conf=conf)
     return sc, SparkSession(sc)

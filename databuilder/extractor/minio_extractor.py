@@ -1,6 +1,7 @@
-from typing import Any, Iterator, Optional
+from typing import Any, Iterator, Optional, cast
 
 import boto3
+from mypy_boto3_s3 import S3Client
 from pyhocon import ConfigTree
 from pyspark.sql.session import SparkSession
 
@@ -41,14 +42,9 @@ class MinioExtractor(Extractor):
 
     def get_dataset_iter(self) -> Iterator[str]:
         """Get a list of keys in an S3 bucket."""
-        dataset_paths = set()
-        result = self.s3.meta.client.list_objects(Bucket=self.bucket_name, Delimiter='/',
-                                                  Prefix='v0/')
-        for o in result.get('CommonPrefixes', []):
-            path = o.get('Prefix')
-            if MinioSpecUtils.path_to_dataset_name(path) is None:
-                continue
-            dataset_paths.add(path)
+        s3_client = cast(S3Client, self.s3.meta.client)
+        dataset_paths = MinioSpecUtils.get_dataset_paths(s3_client,
+                                                         self.bucket_name)
         return iter(dataset_paths)
 
     def extract(self) -> Any:

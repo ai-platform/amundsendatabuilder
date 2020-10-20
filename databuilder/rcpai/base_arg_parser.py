@@ -46,6 +46,8 @@ class RCPArgParser(object):
         return parser
 
     def add_argument(self, *args: Any, **kwargs: Any) -> None:
+        if self.args is not None:
+            raise RuntimeError('attempted to add args to an already parsed argparser')
         self.parser.add_argument(*args, **kwargs)
 
     def parse_args(self) -> Any:

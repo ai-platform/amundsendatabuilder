@@ -3,7 +3,7 @@ import os
 from pyhocon import ConfigFactory
 from pyspark.sql.session import SparkSession
 
-from databuilder.extractor.minio_extractor import MinioExtractor
+from databuilder.extractor.minio_stats_extractor import MinioStatsExtractor
 from databuilder.job.job import DefaultJob
 from databuilder.loader.file_system_neo4j_csv_loader import FsNeo4jCSVLoader
 from databuilder.publisher import neo4j_csv_publisher
@@ -16,22 +16,22 @@ from databuilder.utils.minio_conf import MinioConf
 from databuilder.utils.spark_driver import initSparkSession
 
 
-class MinioLoader(BaseDataLoader):
+class MinioStatsLoader(BaseDataLoader):
     def create_extract_job(self, minio_conf: MinioConf, session: SparkSession, *args, **kwargs) -> DefaultJob:
         tmp_folder = os.path.join(self.base_dir, 'table_metadata')
         node_files_folder = f'{tmp_folder}/nodes/'
         relationship_files_folder = f'{tmp_folder}/relationships/'
 
         job_config = ConfigFactory.from_dict({
-            'extractor.minio.{}'.format(MinioExtractor.ACCESS_KEY):
+            'extractor.minio.columnstats.{}'.format(MinioStatsExtractor.ACCESS_KEY):
                 minio_conf.access_key,
-            'extractor.minio.{}'.format(MinioExtractor.SECRET_KEY):
+            'extractor.minio.columnstats.{}'.format(MinioStatsExtractor.SECRET_KEY):
                 minio_conf.secret_key,
-            'extractor.minio.{}'.format(MinioExtractor.BUCKET_NAME):
+            'extractor.minio.columnstats.{}'.format(MinioStatsExtractor.BUCKET_NAME):
                 minio_conf.bucket,
-            'extractor.minio.{}'.format(MinioExtractor.ENDPOINT_URL):
+            'extractor.minio.columnstats.{}'.format(MinioStatsExtractor.ENDPOINT_URL):
                 minio_conf.endpoint,
-            'extractor.minio.{}'.format(MinioExtractor.SPARK_SESSION_KEY):
+            'extractor.minio.columnstats.{}'.format(MinioStatsExtractor.SPARK_SESSION_KEY):
                 session,
             'loader.filesystem_csv_neo4j.{}'.format(FsNeo4jCSVLoader.NODE_DIR_PATH):
                 node_files_folder,
@@ -51,23 +51,23 @@ class MinioLoader(BaseDataLoader):
                 'unique_tag',  # should use unique tag here like {ds}
         })
         job = DefaultJob(conf=job_config,
-                         task=DefaultTask(extractor=MinioExtractor(), loader=FsNeo4jCSVLoader()),
+                         task=DefaultTask(extractor=MinioStatsExtractor(), loader=FsNeo4jCSVLoader()),
                          publisher=Neo4jCsvPublisher())
         return job
 
 
 if __name__ == "__main__":
     log.init()
-    parser = MinioParser(description='Index tables in a Minio bucket')
+    parser = MinioParser(description='Load column aggregations for Minio bucket')
 
     es_client = parser.es_client()
     neo4j_conf = parser.neo4j_conf()
     minio_conf = parser.minio_conf()
     args = parser.parse_args()
 
-    loader = MinioLoader(es_client=es_client, neo4j_conf=neo4j_conf)
+    loader = MinioStatsLoader(es_client=es_client, neo4j_conf=neo4j_conf)
     sc, session = initSparkSession(minio_conf=minio_conf,
-                                   app_name='amundsen-index-minio',
+                                   app_name='amundsen-minio-stats',
                                    k8s_hostname=args.hostname)
     loader.load(minio_conf, session)
     sc.stop()

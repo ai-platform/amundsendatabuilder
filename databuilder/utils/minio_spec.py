@@ -1,7 +1,8 @@
 import os
-from typing import Optional, Tuple, Dict
+from typing import Optional, Tuple, Dict, Set
 from dataclasses import dataclass
 
+from mypy_boto3_s3.client import S3Client
 from pyspark.sql.session import SparkSession
 from pyspark.sql import DataFrame
 
@@ -27,11 +28,11 @@ class CSVFormat(Format):
     def spark_load(self, spark_session: SparkSession, s3_path: str) -> DataFrame:
         if self.datafile is not None:
             s3_path = f'{s3_path}/{self.datafile}'
-        return spark_session.read\
-            .format(self.format)\
+        return spark_session.read \
+            .format(self.format) \
             .option("header", True) \
             .option("inferSchema", True) \
-            .option("nullValue", "-")\
+            .option("nullValue", "-") \
             .load(s3_path)
 
 
@@ -71,3 +72,17 @@ class MinioSpecUtils(object):
         except Exception as e:
             print(e)
             raise ValueError(f"Invalid dataset name: {dataset_name}")
+
+    @staticmethod
+    def get_dataset_paths(client: S3Client, bucket: str) -> Set[str]:
+        dataset_paths = set()
+        result = client.list_objects(Bucket=bucket,
+                                     Delimiter='/',
+                                     Prefix='v0/')
+        for o in result.get('CommonPrefixes', []):
+            path = o.get('Prefix')
+            if path is None or MinioSpecUtils.path_to_dataset_name(path) is None:
+                continue
+            dataset_paths.add(path)
+
+        return dataset_paths

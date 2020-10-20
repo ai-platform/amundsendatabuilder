@@ -1,5 +1,6 @@
 YB_IMAGE := amundsen-loader-yugabyte
 MINIO_IMAGE := amundsen-loader-minio
+MINIO_STATS_IMAGE := amundsen-loader-minio-stats
 VERSION:= $(shell git describe --tags --dirty)
 
 .PHONY: clean
@@ -27,13 +28,17 @@ mypy:
 .PHONY: test
 test: build test_unit lint mypy
 
-.PHONY: ybimage
-ybimage:
+.PHONY: yb-image
+yb-image:
 	docker build --build-arg scriptpath="rcpai/yugabyte_sql_loader.py" -f docker/base.Dockerfile -t ${YB_IMAGE}:${VERSION} .
 
-.PHONY: minioimage
-minioimage:
+.PHONY: minio-image
+minio-image:
 	docker build --build-arg scriptpath="rcpai/minio_loader.py" -f docker/spark.Dockerfile -t ${MINIO_IMAGE}:${VERSION} .
 
+.PHONY: minio-stats-image
+minio-stats-image:
+	docker build --build-arg scriptpath="rcpai/minio_stats_loader.py" -f docker/spark.Dockerfile -t ${MINIO_STATS_IMAGE}:${VERSION} .
+
 .PHONY: image
-image: minioimage ybimage
+image: minio-image minio-stats-image yb-image

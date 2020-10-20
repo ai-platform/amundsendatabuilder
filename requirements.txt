@@ -60,7 +60,12 @@ unidecode
 
 requests==2.23.0,<3.0
 
+### RCP AI
+# libraries
 psycopg2-binary==2.8.5
 boto3==1.9.66
 pyspark==3.0.1
 dataclasses==0.6
+
+# types
+boto3-stubs[s3]==1.16.0.0

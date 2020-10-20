@@ -27,9 +27,9 @@ class TableColumnStats(Neo4jCsvSerializable):
                  stat_val: str,
                  start_epoch: str,
                  end_epoch: str,
-                 db: str='hive',
-                 cluster: str='gold',
-                 schema: str=None
+                 db: str = 'hive',
+                 cluster: str = 'gold',
+                 schema: str = None
                  ) -> None:
         if schema is None:
             self.schema, self.table = table_name.split('.')
@@ -37,7 +37,7 @@ class TableColumnStats(Neo4jCsvSerializable):
             self.table = table_name.lower()
             self.schema = schema.lower()
         self.db = db
-        self.col_name = col_name.lower()
+        self.col_name = col_name
         self.start_epoch = start_epoch
         self.end_epoch = end_epoch
         self.cluster = cluster
